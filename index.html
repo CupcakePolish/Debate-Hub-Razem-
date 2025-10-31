@@ -359,15 +359,7 @@ function renderHome(){
   list.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openDoc(b.dataset.open));
   list.querySelectorAll("[data-export]").forEach(b=>b.onclick=()=>exportDoc(b.dataset.export));
   list.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{ if(confirm("Na pewno usunąć ten dokument?")){ await deleteDoc(b.dataset.del); }});
-}
-function showHome(clearLast=true){
-  curId=null; curBranchId=null;
-  if(clearLast){
-    hub.lastOpenId=null; hub.lastOpenBranch=null;
-    saveLocal({sync:false});
-  }
-  renderHome();
-}
+
 $("#brand-home").onclick=()=>showHome(true);
 
 /* ====== DOC ====== */
@@ -428,7 +420,7 @@ $("#add-branch").onclick=addBranchFromSelection;
 function spawnInlineTag(anchorId){const anchor=document.getElementById(anchorId); if(!anchor) return; const next=anchor.nextElementSibling; if(next && next.classList.contains("inline-tag")) next.remove(); const d=hub.docs[curId]; const count=(d.anchors[anchorId]||[]).length; const tag=document.createElement("span"); tag.className="inline-tag"; tag.textContent=count?`branch ×${count}`:"branch"; tag.dataset.anchor=anchorId; tag.setAttribute("contenteditable","false"); anchor.after(tag);}
 function attachInline(){ const d=hub.docs[curId]; Object.keys(d.anchors).forEach(aid=>{ if(document.getElementById(aid)) spawnInlineTag(aid); }); }
 const pop=$("#anchor-pop");
-function openAnchorMenu(el){const rect=el.getBoundingClientRect(); const aid=el.dataset.anchor; const d=hub.docs[curId]; const arr=d.anchors[aid]||[]; pop.innerHTML=""; const add=document.createElement("div"); add.className="pop-item"; add.textContent="Dodaj nowy branch"; add.onclick=()=>{pop.style.display="none"; const a=document.getElementById(aid); if(!a) return; const range=document.createRange(); range.selectNodeContents(a); const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range); addBranchFromSelection(); }; pop.appendChild(add); arr.forEach(bid=>{const b=d.branches[bid]; const it=document.createElement("div"); it.className="pop-item"; it.textContent=(b.title||b.quoteText||"branch").slice(0,80); it.onclick=()=>{pop.style.display="none"; openBranch(bid);} ; pop.appendChild(it);}); pop.style.left=(rect.left+window.scrollX)+"px"; pop.style.top=(rect.bottom+window.scrollY+6)+"px"; pop.style.display="block";}
+
 document.addEventListener('click',(e)=>{
   const tag=e.target.closest('.inline-tag');
   if(tag){
