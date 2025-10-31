@@ -46,7 +46,7 @@
 
   #doc{display:none}
 
-  /* FIX: toolbar travels with you */
+  /* fixed toolbar traveling down */
   .toolbar-fixed{
     position:fixed;left:0;right:0;top:60px;z-index:90;
     padding:6px 18px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,255,255,.92));
@@ -61,14 +61,13 @@
   .tbtn.primary{background:linear-gradient(180deg,var(--accent3),var(--accent2));color:#fff;border-color:#dc8ad2}
   .tbtn.icon{padding:2px 8px;font-weight:700}
 
-  /* spacer under fixed toolbar */
   .toolbar-spacer{height:calc(var(--toolbar-h) + 16px)}
 
   .canvas{display:grid;grid-template-columns:1fr min(900px,92vw) 1fr}
   .page{
     grid-column:2;background:var(--paper);min-height:70vh;margin:14px 0;padding:96px 96px;
     box-shadow:var(--shadow);border-radius:6px;
-    cursor:text; caret-color:#111; /* FIX: caret visible */
+    cursor:text; caret-color:#111; /* caret visible */
   }
 
   .meta-box{grid-column:2;margin-top:12px;margin-bottom:8px}
@@ -113,9 +112,16 @@
   @keyframes flash {0%{box-shadow:0 0 0 0 rgba(210,61,148,.6)}100%{box-shadow:0 0 0 14px rgba(210,61,148,0)}}
   .flash{animation:flash 1.2s ease-out 0s 2}
 
-  /* pełnoekranowy wybór username */
+  /* username overlay */
   #username-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:120}
   #username-card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px;width:min(520px,95vw)}
+
+  /* little popover menu for branches */
+  #anchor-pop{
+    position:absolute;display:none;z-index:95; background:#fff; border:1px solid var(--line);
+    box-shadow:var(--shadow-sm); border-radius:10px; padding:6px; max-width:320px;
+  }
+  #anchor-pop .item{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:4px 0;background:#fff;cursor:pointer}
 </style>
 </head>
 <body>
@@ -138,7 +144,6 @@
   </div>
 </header>
 
-<!-- fixed toolbar -->
 <div class="toolbar-fixed" id="toolbar-wrap" style="display:none">
   <div class="toolbar">
     <button class="tbtn" data-cmd="bold">B</button>
@@ -207,9 +212,7 @@
       </div>
 
       <div class="sep"></div>
-      <div class="muted" id="b-meta" style="font-size:12px;display:flex;align-items:center;gap:8px">
-        <!-- author • time • ⚙ -->
-      </div>
+      <div class="muted" id="b-meta" style="font-size:12px;display:flex;align-items:center;gap:8px"></div>
     </div>
 
     <div class="sep"></div>
@@ -234,7 +237,7 @@
   </div>
 </section>
 
-<div id="anchor-pop" class="popover"></div>
+<div id="anchor-pop"></div>
 
 <!-- Username overlay -->
 <div id="username-overlay">
@@ -257,7 +260,7 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&l
 const DEVKEY="razem-device-id"; let deviceId=localStorage.getItem(DEVKEY); if(!deviceId){deviceId="u_"+uid();localStorage.setItem(DEVKEY,deviceId);}
 
 /* ====== PAMIĘĆ LOKALNA STRONY ====== */
-const HUB_KEY="razem-hub-v9";
+const HUB_KEY="razem-hub-v9b";
 let hub={docs:{}, lastOpenId:null};
 
 function load(){
@@ -337,8 +340,7 @@ async function ensureUsername(){
   badge.textContent=label;
   badge2.textContent=label;
   if(me && me.username){ return true; }
-  if(!me || !me.ok){ return false; } // brak Access
-  // overlay
+  if(!me || !me.ok){ return false; }
   const overlay = document.getElementById('username-overlay');
   const input = document.getElementById('username-input');
   const saveBtn = document.getElementById('username-save');
@@ -407,7 +409,6 @@ $("#brand-home").onclick=()=>renderHome();
 let curId=null, curBranchId=null;
 function canEditMeta(d){ return !!(me && d && d.owner===me.userId); }
 function setMetaMode(published, editable){
-  // when editable=false we always show view mode
   $("#meta-edit").style.display= (editable && !published) ? "grid":"none";
   $("#meta-view").style.display= (published || !editable) ? "block":"none";
   $("#meta-edit-btn").style.display = editable ? "inline-flex":"none";
@@ -422,7 +423,6 @@ function openDoc(id){
   const d=hub.docs[id];
   $("#page").innerHTML=d.html||"<p><b>Wklej tutaj transkrypt.</b></p>";
 
-  // meta view
   $("#meta-title").value=d.title||""; $("#meta-yt").value=d.yt||""; $("#meta-desc").value=d.desc||"";
   $("#v-title").textContent=d.title||""; $("#v-yt").textContent=d.yt||"—"; $("#v-yt").href=d.yt||"#"; $("#v-desc").textContent=d.desc||"";
   $("#v-owner").textContent = d.ownerName ? `Autor transkryptu: @${d.ownerName}` : '';
@@ -430,7 +430,6 @@ function openDoc(id){
   const editableMeta = canEditMeta(d);
   setMetaMode(!!d.metaPublished, editableMeta);
 
-  // delete document button
   $("#doc-delete").style.display = editableMeta ? 'inline-flex':'none';
 
   setTimeout(()=>attachInline(),0);
@@ -449,27 +448,81 @@ $("#meta-publish").onclick=()=>{
 $("#meta-edit-btn").onclick=()=>{const d=hub.docs[curId]; if(!canEditMeta(d)) return; setMetaMode(false,true); $("#meta-title").value=d.title; $("#meta-yt").value=d.yt; $("#meta-desc").value=d.desc;};
 ["meta-title","meta-yt","meta-desc"].forEach(id=>{ $("#"+id).addEventListener("input",()=>{const d=hub.docs[curId]; if(!d || !canEditMeta(d))return; snapshot(); d.title=$("#meta-title").value; d.yt=$("#meta-yt").value; d.desc=$("#meta-desc").value; d.updated=new Date().toISOString(); saveLocal({docId:curId});});});
 
-// body editing allowed for everyone
+// body editing for all
 $("#page").addEventListener("input",()=>{const d=hub.docs[curId]; d.html=$("#page").innerHTML; d.updated=new Date().toISOString(); saveLocal({docId:curId});});
 $("#page").addEventListener("keydown",()=>{snapshot();},{capture:true});
 
-// STRONGER protection: do not allow deletion crossing anchors/tags
+/* ====== STRONG PROTECTION + OPEN ON CLICK ====== */
+const pop=$("#anchor-pop");
+function hidePop(){ pop.style.display='none'; }
+document.addEventListener('click',(e)=>{
+  const tag=e.target.closest('.inline-tag');
+  const anch=e.target.closest('.branch-anchor');
+  if(tag){ e.preventDefault(); openAnchorMenu(tag.dataset.anchor, tag); return;}
+  if(anch){ e.preventDefault(); // if user clicks highlighted text, show menu next to following tag or the range
+    const next=anch.nextElementSibling && anch.nextElementSibling.classList.contains('inline-tag') ? anch.nextElementSibling : null;
+    openAnchorMenu(anch.id, next || anch);
+    return;
+  }
+  if(pop.style.display==='block' && !pop.contains(e.target)) hidePop();
+});
+
+function openAnchorMenu(anchorId, refEl){
+  const d=hub.docs[curId]; const ids=(d.anchors[anchorId]||[]).slice();
+  if(ids.length===0) return;
+  if(ids.length===1){ openBranch(ids[0]); return; }
+  pop.innerHTML='';
+  ids.forEach(id=>{
+    const b=d.branches[id]; const title=b.title||b.quoteText||"Branch";
+    const btn=document.createElement('button');
+    btn.className='item'; btn.textContent=title; btn.onclick=()=>{hidePop(); openBranch(id);};
+    pop.appendChild(btn);
+  });
+  const r=refEl.getBoundingClientRect();
+  pop.style.left= Math.min(window.innerWidth-340, r.left)+'px';
+  pop.style.top = (r.bottom+6+window.scrollY)+'px';
+  pop.style.display='block';
+}
+
+// helper: does selection content or boundary touch protected nodes
 function selectionTouches(selector){
   const sel=window.getSelection(); if(!sel.rangeCount) return false;
   const r=sel.getRangeAt(0);
-  const container = document.createElement('div');
-  container.appendChild(r.cloneContents());
-  return container.querySelector(selector)!=null
-      || (sel.anchorNode && (sel.anchorNode.nodeType===1 ? sel.anchorNode : sel.anchorNode.parentElement)?.closest(selector))
-      || (sel.focusNode && (sel.focusNode.nodeType===1 ? sel.focusNode : sel.focusNode.parentElement)?.closest(selector));
+  if(!r.collapsed){
+    const frag=document.createElement('div'); frag.appendChild(r.cloneContents());
+    if(frag.querySelector(selector)) return true;
+  }
+  const aNode=(sel.anchorNode?.nodeType===1? sel.anchorNode : sel.anchorNode?.parentElement);
+  const fNode=(sel.focusNode?.nodeType===1? sel.focusNode : sel.focusNode?.parentElement);
+  return aNode?.closest(selector) || fNode?.closest(selector);
 }
+// boundary check for Backspace/Delete next to protected elements
+function caretAdjacentToProtected(backspace=true){
+  const sel=window.getSelection(); if(!sel.rangeCount) return false;
+  const r=sel.getRangeAt(0); if(!r.collapsed) return false;
+  let node=sel.anchorNode, offset=sel.anchorOffset;
+  if(!node) return false;
+  if(node.nodeType===3){ // text node
+    if(backspace && offset>0) return false;
+    if(!backspace && offset < node.textContent.length) return false;
+    const ref = backspace ? node.previousSibling : node.nextSibling;
+    return !!(ref && (ref.nodeType===1) && (ref.classList?.contains('inline-tag')||ref.classList?.contains('branch-anchor')));
+  } else if(node.nodeType===1){ // element
+    const child = node.childNodes[backspace ? offset-1 : offset];
+    return !!(child && child.nodeType===1 && (child.classList?.contains('inline-tag')||child.classList?.contains('branch-anchor')));
+  }
+  return false;
+}
+
 $("#page").addEventListener("beforeinput",(e)=>{
-  // block any destructive action that touches anchor or inline-tag
   const destructive = e.inputType.startsWith("delete") || e.inputType==="insertParagraph" || e.inputType==="insertFromPaste";
-  if(destructive && (selectionTouches(".inline-tag") || selectionTouches(".branch-anchor"))){
+  if(!destructive) return;
+  if(selectionTouches(".inline-tag, .branch-anchor") || caretAdjacentToProtected(e.inputType.startsWith("deleteContentBackward"))){
     e.preventDefault();
+    hidePop();
   }
 });
+
 document.querySelectorAll(".tbtn[data-cmd]").forEach(b=>b.onclick=()=>{snapshot(); document.execCommand(b.dataset.cmd,false,null); const d=hub.docs[curId]; d.html=$("#page").innerHTML; saveLocal({docId:curId});});
 function fontDelta(n){const sel=window.getSelection(); if(!sel.rangeCount||sel.isCollapsed) return; snapshot(); const r=sel.getRangeAt(0); const s=document.createElement("span"); s.style.fontSize=`calc(1em + ${n>0?'.1':'-.1'}em)`; s.appendChild(r.extractContents()); r.insertNode(s); const d=hub.docs[curId]; d.html=$("#page").innerHTML; saveLocal({docId:curId});}
 $("#font-inc").onclick=()=>fontDelta(1); $("#font-dec").onclick=()=>fontDelta(-1);
@@ -531,10 +584,8 @@ function openBranch(bid,newly=false){
   renderReactions(b); renderComments(b);
   $("#drawer").style.display="block"; if(newly && !b.posted) $("#b-title").focus();
 
-  // wire gear if present
   const gear = document.getElementById('b-edit'); if(gear) gear.onclick=()=>{ if(!(me && b.owner===me.userId)) return; $("#b-editable").style.display="block"; $("#b-locked").style.display="none"; $("#post-section").style.display="none"; $("#b-title").value=b.title||""; $("#b-body").value=b.body||""; $("#b-title").focus(); };
 }
-// move drawer
 (function(){
   const drag=$("#drawer-head"); const panel=$("#drawer"); let sx=0, sy=0, ox=0, oy=0, dragging=false;
   drag.addEventListener('mousedown',e=>{dragging=true; sx=e.clientX; sy=e.clientY; const r=panel.getBoundingClientRect(); ox=r.left; oy=r.top; document.body.style.userSelect='none';});
@@ -549,7 +600,7 @@ $("#b-delete").onclick=()=>{const d=hub.docs[curId]; const b=d.branches[curBranc
 function renderReactions(b){const bar=$("#react-bar"); bar.innerHTML=""; const plusActive=(b.reactions?.plus||[]).includes(me?.userId); const wikiActive=(b.reactions?.wiki||[]).includes(me?.userId); const plus=document.createElement("button"); plus.className="chip"+(plusActive?" active":""); plus.innerHTML=`+1 <span class="badge">${(b.reactions.plus||[]).length}</span>`; plus.onclick=()=>{snapshot(); toggleOne(b,"plus");}; const wiki=document.createElement("button"); wiki.className="chip"+(wikiActive?" active":""); wiki.innerHTML=`Wiki <span class="badge">${(b.reactions.wiki||[]).length}</span>`; wiki.onclick=()=>{snapshot(); toggleOne(b,"wiki");}; bar.appendChild(plus); bar.appendChild(wiki);}
 function toggleOne(b,key){ if(!b.posted) return; b.reactions=b.reactions||{plus:[],wiki:[]}; if(!Array.isArray(b.reactions[key])) b.reactions[key]=[]; const arr=b.reactions[key]; const myId = me?.userId; if(!myId) return; const i=arr.indexOf(myId); if(i>-1) arr.splice(i,1); else arr.push(myId); b.updated=new Date().toISOString(); saveLocal({docId:curId}); renderReactions(b);}
 
-/* comments with edit (inline) + delete */
+/* comments */
 $("#reply-btn").onclick=addReply; $("#reply-text").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault(); addReply();}});
 function addReply(){const b=branch(); if(!b||!b.posted) return; const t=$("#reply-text").value.trim(); if(!t) return; snapshot(); b.comments.push({id:"c_"+uid(),userId:me?.userId,text:t,username:currentUserLabel(),ts:new Date().toISOString()}); $("#reply-text").value=""; b.updated=new Date().toISOString(); saveLocal({docId:curId}); renderComments(b);}
 function deleteComment(cid){const b=branch(); if(!b) return; snapshot(); b.comments=b.comments.filter(c=>!(c.id===cid && c.userId===me?.userId)); b.updated=new Date().toISOString(); saveLocal({docId:curId}); renderComments(b);}
@@ -633,7 +684,6 @@ window.addEventListener("load", async ()=>{
   load();
   await ensureUsername();
 
-  // sync list with KV
   const ids = await remoteList();
   if (Array.isArray(ids)) {
     const known = new Set(ids);
@@ -650,11 +700,10 @@ window.addEventListener("load", async ()=>{
     saveLocal({sync:false});
   }
 
-  // go back where you were (document only; no auto opening branch)
   const docIds=Object.keys(hub.docs);
   if(docIds.length===0){ renderHome(); return; }
   if(hub.lastOpenId && hub.docs[hub.lastOpenId]) {
-    openDoc(hub.lastOpenId);
+    openDoc(hub.lastOpenId); // no random branch auto-open
   } else {
     renderHome();
   }
