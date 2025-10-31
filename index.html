@@ -234,13 +234,51 @@ async function setUsername(name){
   return await r.json();
 }
 
+<!-- ==== Undo/Redo ==== -->
+<script>
 /* ==== Undo/Redo ==== */
-const historyStack=[], redoStack=[];
-function snapshot(){ if(!curId) return; const d=structuredClone(hub.docs[curId]); historyStack.push(d); if(historyStack.length>60) historyStack.shift(); redoStack.length=0; }
-function undo(){ const prev=historyStack.pop(); if(!prev) return; redoStack.push(structuredClone(hub.docs[curId])); hub.docs[curId]=prev; save(); openDoc(curId); }
-function redo(){ const next=redoStack.pop(); if(!next) return; historyStack.push(structClone(hub.docs[curId])); hub.docs[curId]=next; save(); openDoc(curId); }
-function structClone(o){return structuredClone?structuredClone(o):JSON.parse(JSON.stringify(o));}
-document.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="z"){ e.preventDefault(); e.shiftKey?redo():undo(); }});
+const historyStack = [], redoStack = [];
+
+function snapshot(){
+  if(!curId) return;
+  const d = structClone(hub.docs[curId]);
+  historyStack.push(d);
+  if(historyStack.length > 60) historyStack.shift();
+  redoStack.length = 0;
+}
+
+function undo(){
+  const prev = historyStack.pop();
+  if(!prev) return;
+  redoStack.push(structClone(hub.docs[curId]));
+  hub.docs[curId] = prev;
+  save();
+  openDoc(curId);
+}
+
+function redo(){
+  const next = redoStack.pop();
+  if(!next) return;
+  historyStack.push(structClone(hub.docs[curId]));
+  hub.docs[curId] = next;
+  save();
+  openDoc(curId);
+}
+
+function structClone(o){
+  return (typeof structuredClone === 'function')
+    ? structuredClone(o)
+    : JSON.parse(JSON.stringify(o));
+}
+
+document.addEventListener('keydown', e=>{
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z'){
+    e.preventDefault();
+    e.shiftKey ? redo() : undo();
+  }
+});
+</script>
+
 
 /* ==== Docs ==== */
 function createDoc({title="Nowy dokument",html=""}={}){const id="d_"+uid(); hub.docs[id]={id,title,desc:"",yt:"",metaPublished:false,html,branches:{},anchors:{},created:new Date().toISOString(),updated:new Date().toISOString()}; save(); return id}
