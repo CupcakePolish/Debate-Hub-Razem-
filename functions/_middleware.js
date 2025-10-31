@@ -1,34 +1,28 @@
 // /functions/_middleware.js
 import { getEmailFromRequest, redirect } from './_utils';
 
-// Run on every request. Keep it crash-proof: never throw.
 export async function onRequest({ request, env, next }) {
   const url = new URL(request.url);
   const path = url.pathname;
 
-  // Let Pages Functions and static assets pass without checks
+  // Let these pass
   if (path.startsWith('/cdn-cgi/')) return next();
   if (path.startsWith('/api/')) return next();
 
-  // Try to read email from Cloudflare Access header (may be absent)
+  // Try reading email (if not logged in, Zero Trust will challenge)
   let email = null;
-  try { email = getEmailFromRequest(request); } catch { /* ignore */ }
+  try { email = getEmailFromRequest(request); } catch {}
 
-  // If not logged in, let Zero Trust Access handle the login challenge
   if (!email) return next();
 
-  // If logged in, ensure username exists in KV; if not, send to /setup
+  // If logged-in and username not set -> send to /setup
   try {
     if (env.KV_USERS) {
       const rec = await env.KV_USERS.get(`email:${email.toLowerCase()}`, { type: 'json' });
-      if (!rec?.username && path !== '/setup') {
-        return redirect('/setup');
-      }
+      if (!rec?.username && path !== '/setup') return redirect('/setup');
     }
   } catch {
-    // If KV binding is missing or errors, don't block the site
+    // don't crash if KV missing
   }
-
   return next();
 }
-
