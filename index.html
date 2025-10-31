@@ -80,6 +80,15 @@
   /* pełnoekranowy wybór username */
   #username-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:120}
   #username-card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px;width:min(520px,95vw)}
+
+  /* prosta “popover” dla listy branchy */
+  .popover{
+    position:absolute; display:none; z-index:95;
+    background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow-sm);
+    padding:6px; min-width:220px;
+  }
+  .pop-item{padding:8px 10px; border-radius:8px; cursor:pointer}
+  .pop-item:hover{background:#f6f2f7}
 </style>
 </head>
 <body>
@@ -297,7 +306,6 @@ async function ensureUsername(){
   badge2.textContent=label;
   if(me && me.username){ return true; }
   if(!me || !me.ok){ return false; } // brak Access
-  // overlay
   const overlay = document.getElementById('username-overlay');
   const input = document.getElementById('username-input');
   const saveBtn = document.getElementById('username-save');
@@ -326,10 +334,7 @@ async function ensureUsername(){
     input.addEventListener('keydown',e=>{ if(e.key==='Enter') trySave(); });
   });
 }
-
-function currentUserLabel(){
-  return me?.username || me?.email?.split('@')[0] || 'anon';
-}
+function currentUserLabel(){ return me?.username || me?.email?.split('@')[0] || 'anon'; }
 
 /* ====== HOME ====== */
 function renderHome(){
@@ -359,8 +364,16 @@ function renderHome(){
   list.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openDoc(b.dataset.open));
   list.querySelectorAll("[data-export]").forEach(b=>b.onclick=()=>exportDoc(b.dataset.export));
   list.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{ if(confirm("Na pewno usunąć ten dokument?")){ await deleteDoc(b.dataset.del); }});
+} // <— important: close renderHome()
 
+// brand click => Home
 $("#brand-home").onclick=()=>showHome(true);
+function showHome(force=false){
+  curId=null; curBranchId=null;
+  hub.lastOpenBranch=null;
+  saveLocal({sync:false});
+  renderHome();
+}
 
 /* ====== DOC ====== */
 let curId=null, curBranchId=null;
@@ -375,7 +388,6 @@ function openDoc(id){
   $("#meta-title").value=d.title||""; $("#meta-yt").value=d.yt||""; $("#meta-desc").value=d.desc||"";
   $("#v-title").textContent=d.title||""; $("#v-yt").textContent=d.yt||"—"; $("#v-yt").href=d.yt||"#"; $("#v-desc").textContent=d.desc||"";
 
-  // tylko autor może usuwać dokument
   const delBtn=$("#doc-delete");
   if(me && d.owner===me.userId) delBtn.style.display='inline-flex'; else delBtn.style.display='none';
   setTimeout(()=>attachInline(),0);
@@ -417,10 +429,16 @@ function addBranchFromSelection(){
 }
 $("#add-branch").onclick=addBranchFromSelection;
 
-function spawnInlineTag(anchorId){const anchor=document.getElementById(anchorId); if(!anchor) return; const next=anchor.nextElementSibling; if(next && next.classList.contains("inline-tag")) next.remove(); const d=hub.docs[curId]; const count=(d.anchors[anchorId]||[]).length; const tag=document.createElement("span"); tag.className="inline-tag"; tag.textContent=count?`branch ×${count}`:"branch"; tag.dataset.anchor=anchorId; tag.setAttribute("contenteditable","false"); anchor.after(tag);}
+function spawnInlineTag(anchorId){
+  const anchor=document.getElementById(anchorId); if(!anchor) return;
+  const next=anchor.nextElementSibling; if(next && next.classList.contains("inline-tag")) next.remove();
+  const d=hub.docs[curId]; const count=(d.anchors[anchorId]||[]).length;
+  const tag=document.createElement("span"); tag.className="inline-tag"; tag.textContent=count?`branch ×${count}`:"branch"; tag.dataset.anchor=anchorId; tag.setAttribute("contenteditable","false"); anchor.after(tag);
+}
 function attachInline(){ const d=hub.docs[curId]; Object.keys(d.anchors).forEach(aid=>{ if(document.getElementById(aid)) spawnInlineTag(aid); }); }
 const pop=$("#anchor-pop");
 
+// click handling
 document.addEventListener('click',(e)=>{
   const tag=e.target.closest('.inline-tag');
   if(tag){
@@ -443,6 +461,47 @@ document.addEventListener('click',(e)=>{
   }
   if(pop.style.display==='block' && !pop.contains(e.target)) pop.style.display='none';
 });
+
+// popover with branch list
+function openAnchorMenu(el){
+  const aid = el.dataset.anchor;
+  const d = hub.docs[curId];
+  const arr = (d.anchors[aid] || []).slice();
+
+  // content
+  pop.innerHTML = "";
+  const add = document.createElement("div");
+  add.className = "pop-item";
+  add.textContent = "Dodaj nowy branch";
+  add.onclick = () => {
+    pop.style.display = "none";
+    const anchor = document.getElementById(aid);
+    if(!anchor) return;
+    const range = document.createRange();
+    range.selectNodeContents(anchor);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    addBranchFromSelection();
+  };
+  pop.appendChild(add);
+
+  arr.forEach(bid => {
+    const b = d.branches[bid];
+    if(!b) return;
+    const it = document.createElement("div");
+    it.className = "pop-item";
+    it.textContent = (b.title || b.quoteText || "branch").slice(0, 100);
+    it.onclick = () => { pop.style.display="none"; openBranch(bid); };
+    pop.appendChild(it);
+  });
+
+  // position
+  const r = el.getBoundingClientRect();
+  pop.style.left = (r.left + window.scrollX) + "px";
+  pop.style.top  = (r.bottom + window.scrollY + 6) + "px";
+  pop.style.display = "block";
+}
 
 function branch(){return hub.docs[curId].branches[curBranchId]}
 function openBranch(bid,newly=false){
@@ -467,14 +526,13 @@ function openBranch(bid,newly=false){
     $("#b-body").value=b.body||"";
     $("#b-status").textContent="Roboczy — opublikuj, aby odblokować odpowiedzi i reakcje.";
   }
-  // tylko autor może kasować/edytować
   $("#b-edit").style.display = isMine? 'inline-flex' : 'none';
   $("#b-delete").style.display = isMine? 'inline-flex' : 'none';
 
   renderReactions(b); renderComments(b);
   $("#drawer").style.display="block"; if(newly && !b.posted) $("#b-title").focus();
 }
-// move drawer
+// draggable drawer
 (function(){
   const drag=$("#drawer-head"); const panel=$("#drawer"); let sx=0, sy=0, ox=0, oy=0, dragging=false;
   drag.addEventListener('mousedown',e=>{dragging=true; sx=e.clientX; sy=e.clientY; const r=panel.getBoundingClientRect(); ox=r.left; oy=r.top; document.body.style.userSelect='none';});
@@ -532,7 +590,6 @@ window.addEventListener("load", async ()=>{
   load();
   await ensureUsername(); // pokaże overlay jeśli trzeba
 
-  // 2) zsynchronizuj listę dokumentów z KV
   const ids = await remoteList();
   if (Array.isArray(ids)) {
     const known = new Set(ids);
@@ -549,7 +606,6 @@ window.addEventListener("load", async ()=>{
     saveLocal({sync:false});
   }
 
-  // 3) wróć tam gdzie byłaś
   const docIds=Object.keys(hub.docs);
   if(docIds.length===0){ renderHome(); return; }
   if(hub.lastOpenId && hub.docs[hub.lastOpenId]) {
