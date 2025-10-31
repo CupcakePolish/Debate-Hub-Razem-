@@ -53,7 +53,7 @@
   .meta-line a{color:#5b0c66;text-decoration:underline}
 
   .branch-anchor{background:linear-gradient(0deg,rgba(160,35,127,.12),rgba(160,35,127,.12));border-bottom:2px solid var(--accent2);border-radius:6px;padding:0 3px}
-  .inline-tag{display:inline-flex;gap:6px;align-items:center;border:1px solid #e9d3ee;background:#faf2fb;color:#5c0d66;padding:1px 8px;border-radius:999px;font-size:12px;margin-left:6px;cursor:pointer}
+  .inline-tag{display:inline-flex;gap:6px;align-items:center;border:1px solid #e9d3ee;background:#faf2fb;color:#5c0d66;padding:1px 8px;border-radius:999px;font-size:12px;margin-left:6px;cursor:pointer;pointer-events:auto}
   .inline-tag,[contenteditable=false]{-webkit-user-select:none;user-select:none}
 
   .drawer{position:fixed;right:18px;bottom:18px;width:min(560px,96vw);max-height:84vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);display:none;z-index:80;resize:both}
@@ -425,11 +425,32 @@ function addBranchFromSelection(){
 }
 $("#add-branch").onclick=addBranchFromSelection;
 
-function spawnInlineTag(anchorId){const anchor=document.getElementById(anchorId); if(!anchor) return; const next=anchor.nextElementSibling; if(next && next.classList.contains("inline-tag")) next.remove(); const d=hub.docs[curId]; const count=(d.anchors[anchorId]||[]).length; const tag=document.createElement("span"); tag.className="inline-tag"; tag.textContent=count?`branch ×${count}`:"branch"; tag.dataset.anchor=anchorId; tag.setAttribute("contenteditable","false"); tag.addEventListener("click",(e)=>openAnchorMenu(e.currentTarget)); anchor.after(tag);}
+function spawnInlineTag(anchorId){const anchor=document.getElementById(anchorId); if(!anchor) return; const next=anchor.nextElementSibling; if(next && next.classList.contains("inline-tag")) next.remove(); const d=hub.docs[curId]; const count=(d.anchors[anchorId]||[]).length; const tag=document.createElement("span"); tag.className="inline-tag"; tag.textContent=count?`branch ×${count}`:"branch"; tag.dataset.anchor=anchorId; tag.setAttribute("contenteditable","false"); anchor.after(tag);}
 function attachInline(){ const d=hub.docs[curId]; Object.keys(d.anchors).forEach(aid=>{ if(document.getElementById(aid)) spawnInlineTag(aid); }); }
 const pop=$("#anchor-pop");
 function openAnchorMenu(el){const rect=el.getBoundingClientRect(); const aid=el.dataset.anchor; const d=hub.docs[curId]; const arr=d.anchors[aid]||[]; pop.innerHTML=""; const add=document.createElement("div"); add.className="pop-item"; add.textContent="Dodaj nowy branch"; add.onclick=()=>{pop.style.display="none"; const a=document.getElementById(aid); if(!a) return; const range=document.createRange(); range.selectNodeContents(a); const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range); addBranchFromSelection(); }; pop.appendChild(add); arr.forEach(bid=>{const b=d.branches[bid]; const it=document.createElement("div"); it.className="pop-item"; it.textContent=(b.title||b.quoteText||"branch").slice(0,80); it.onclick=()=>{pop.style.display="none"; openBranch(bid);} ; pop.appendChild(it);}); pop.style.left=(rect.left+window.scrollX)+"px"; pop.style.top=(rect.bottom+window.scrollY+6)+"px"; pop.style.display="block";}
-document.addEventListener("click",(e)=>{ if(pop.style.display==="block" && !pop.contains(e.target) && !e.target.classList.contains("inline-tag")) pop.style.display="none"; });
+document.addEventListener('click',(e)=>{
+  const tag=e.target.closest('.inline-tag');
+  if(tag){
+    e.preventDefault();
+    openAnchorMenu(tag);
+    return;
+  }
+  const anchor=e.target.closest('.branch-anchor');
+  if(anchor){
+    e.preventDefault();
+    const next=anchor.nextElementSibling;
+    if(next && next.classList.contains('inline-tag')){
+      openAnchorMenu(next);
+    } else {
+      spawnInlineTag(anchor.id);
+      const t2=anchor.nextElementSibling;
+      if(t2 && t2.classList.contains('inline-tag')) openAnchorMenu(t2);
+    }
+    return;
+  }
+  if(pop.style.display==='block' && !pop.contains(e.target)) pop.style.display='none';
+});
 
 function branch(){return hub.docs[curId].branches[curBranchId]}
 function openBranch(bid,newly=false){
