@@ -565,37 +565,7 @@ window.addEventListener("load",()=>{load(); if(Object.keys(hub.docs).length===0)
 })();
 </script>
 
-<!-- ADDED: minimal “save edit” hook to /api/save-edit -->
-<script>
-(() => {
-  const btn = document.getElementById('save-edit');
-  if (!btn) return;
 
-  btn.addEventListener('click', async () => {
-    const docId = document.getElementById('doc-id').value || 'debate-001';
-    const text = document.getElementById('edit-text').value.trim();
-    if (!text) { alert('Wpisz zmianę'); return; }
-
-    const res = document.getElementById('edit-result');
-    res.textContent = 'Zapisywanie...';
-
-    const r = await fetch('/api/save-edit', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ docId, change: { type: 'note', text } })
-    });
-
-    if (!r.ok) {
-      res.textContent = 'Błąd: ' + (await r.text());
-      return;
-    }
-
-    const data = await r.json();
-    res.textContent = 'Zapisano: ' + data.key;
-    document.getElementById('edit-text').value = '';
-  });
-})();
-</script>
 </body>
 </html>
 
