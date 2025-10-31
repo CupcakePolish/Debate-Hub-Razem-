@@ -1,21 +1,22 @@
+// functions/api/me.js
+function json(d, s = 200) {
+  return new Response(JSON.stringify(d), {
+    status: s,
+    headers: { 'content-type': 'application/json' },
+  });
+}
+
 export const onRequestGet = async ({ request, env }) => {
   const email = request.headers.get('cf-access-authenticated-user-email') || null;
-  if (!email) {
-    // Brak Cloudflare Access -> front pokaże overlay dopiero po włączeniu Access
-    return new Response(JSON.stringify({ ok: false }), {
-      headers: { 'content-type': 'application/json' },
-    });
-  }
+  if (!email) return json({ ok: false }, 401);
 
-  const userId = email.toLowerCase();
-  const rec = await env.KV_USERS.get(`user:${userId}`, { type: 'json' });
-  return new Response(
-    JSON.stringify({
-      ok: true,
-      email: userId,
-      userId,
-      username: rec?.username || null,
-    }),
-    { headers: { 'content-type': 'application/json' } }
-  );
+  const key = `user:${email.toLowerCase()}`;
+  const u = (await env.KV_USERS.get(key, { type: 'json' })) || null;
+
+  return json({
+    ok: true,
+    email: email.toLowerCase(),
+    userId: u?.userId || email.toLowerCase(),
+    username: u?.username || null,
+  });
 };
