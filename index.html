@@ -15,6 +15,7 @@
   body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial}
   button,input,textarea{font:inherit;color:inherit}
 
+  /* Header */
   header.appbar{position:sticky;top:0;z-index:100;background:linear-gradient(90deg,var(--rzm-accent),var(--rzm-accent-2));color:#fff;box-shadow:var(--shadow-sm)}
   .appbar-inner{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
   .brand{display:flex;gap:10px;align-items:center;cursor:pointer}
@@ -30,22 +31,27 @@
   .grid.cols-3{grid-template-columns:repeat(3,1fr)} @media (max-width:980px){.grid.cols-3{grid-template-columns:1fr}}
   .muted{color:var(--muted)} .row{display:flex;gap:10px;flex-wrap:wrap}
 
+  /* HOME */
   #home .doc-card{padding:14px;border:1px solid var(--line);border-radius:12px;background:#fff}
   #home .doc-card:hover{border-color:#d8c3df;box-shadow:var(--shadow-sm)}
 
+  /* DOC */
   #doc{display:none}
   .toolbar-holder{position:sticky;top:66px;z-index:90}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-sm);padding:10px}
   .tbtn{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;font-weight:700;color:#5b0c66}
   .tbtn.primary{background:linear-gradient(180deg,var(--rzm-accent-3),var(--rzm-accent-2));color:#fff;border-color:#dc8ad2}
 
+  /* anchor popover */
   .popover{position:absolute;display:none;z-index:95;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-sm);padding:6px;min-width:260px}
   .popover .pop-item{padding:8px 10px;border-radius:8px;cursor:pointer}
   .popover .pop-item:hover{background:#f6eaf4}
 
+  /* Canvas */
   .canvas{display:grid;grid-template-columns:1fr min(900px,92vw) 1fr}
   .page{grid-column:2;background:var(--paper);min-height:70vh;margin:14px 0;padding:96px 96px;box-shadow:var(--shadow);border-radius:6px}
 
+  /* Meta box */
   .meta-box{grid-column:2;margin-top:12px;margin-bottom:8px}
   .meta-box .panel{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .meta-box .panel label{font-size:12px;color:var(--muted)}
@@ -59,26 +65,31 @@
   .inline-tag{display:inline-flex;gap:6px;align-items:center;border:1px solid #e9d3ee;background:#faf2fb;color:#5c0d66;padding:1px 8px;border-radius:999px;font-size:12px;margin-left:6px;cursor:pointer}
   .inline-tag,[contenteditable=false]{-webkit-user-select:none;user-select:none}
 
+  /* Drawer (branch) */
   .drawer{position:fixed;right:18px;bottom:18px;width:min(560px,96vw);max-height:84vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);display:none;z-index:80;resize:both}
-  .drawer header{cursor:move;padding:10px 12px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center;justify-content:space-between}
+  .drawer header{cursor:move;padding:10px 12px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center;justify-content:space-between;user-select:none}
   .drawer .content{padding:12px}
   .sep{height:1px;background:var(--line);margin:12px 0}
 
+  /* Comments */
   .comments{display:flex;flex-direction:column;gap:8px}
   .comment{display:flex;gap:10px;align-items:flex-start;background:#fafafa;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
   .comment .avatar{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#efe3f2;color:#5b0c66;display:grid;place-items:center;font-weight:800}
   .comment .meta{font-size:12px;color:var(--muted)}
   .comment .del{margin-left:auto;border:1px solid #e7b7c3;background:#fdecef;color:#7f0f25;border-radius:8px;padding:2px 8px;cursor:pointer}
 
+  /* Reactions */
   .reactions{display:flex;gap:8px;flex-wrap:wrap}
   .chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 10px;cursor:pointer}
   .chip.active{outline:2px solid #d68ad0}
-  .badge{font-size:12px;background:#efecf2;border:1px solid #e1d6e7;padding:2px 6px;border-radius:8px}
+  .badge{font-size:12px;background:#efecf2;border:1px solid #e1d6e7;padding:2px 6px;border-radius:8px;margin-left:6px}
 
+  /* Modal: Przegląd */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.25);display:none;align-items:center;justify-content:center;z-index:85}
   .modal .box{width:min(900px,95vw);max-height:80vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:12px}
   .pill{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fff;cursor:pointer}
 
+  /* Highlighter animation */
   @keyframes flash {0%{box-shadow:0 0 0 0 rgba(210,61,148,.6)}100%{box-shadow:0 0 0 14px rgba(210,61,148,0)}}
   .flash{animation:flash 1.2s ease-out 0s 2}
 
@@ -137,14 +148,12 @@
 
   <!-- meta box -->
   <div class="meta-box">
-    <!-- tryb edycji -->
     <div class="panel" id="meta-edit">
       <div><label>Tytuł transkryptu</label><input id="meta-title" class="input" placeholder="Nazwa debaty"></div>
       <div><label>Link YouTube</label><input id="meta-yt" class="input" placeholder="https://youtu.be/..."></div>
       <div style="grid-column:1/3"><label>Krótki opis</label><input id="meta-desc" class="input" placeholder="O co chodzi w tej debacie?"></div>
       <div style="grid-column:1/3;display:flex;gap:8px"><button class="tbtn primary" id="meta-publish">Opublikuj metadane</button></div>
     </div>
-    <!-- tryb podglądu -->
     <div class="panel" id="meta-view" style="display:none">
       <div class="meta-view">
         <div class="meta-line"><strong id="v-title"></strong></div>
@@ -162,7 +171,10 @@
 
 <!-- Drawer (branch) -->
 <section class="drawer" id="drawer" role="dialog" aria-modal="true">
-  <header id="drawer-head"><strong id="drawer-title">Branch</strong><button class="tbtn" id="drawer-close">Zamknij</button></header>
+  <header id="drawer-head">
+    <strong id="drawer-title">Branch</strong>
+    <button class="tbtn" id="drawer-close">Zamknij</button>
+  </header>
   <div class="content">
     <div id="b-editable">
       <label class="muted">Tytuł brancha</label>
@@ -184,6 +196,7 @@
     <div id="post-section" style="display:none">
       <div class="sep"></div>
       <div class="reactions" id="react-bar"></div>
+
       <div class="sep"></div>
       <label class="muted">Dodaj odpowiedź</label>
       <div class="row" style="gap:8px"><input id="reply-text" class="input" placeholder="Napisz i Enter" /><button id="reply-btn" class="tbtn">Dodaj</button></div>
@@ -222,10 +235,8 @@
 
 <!-- Mammoth (docx) -->
 <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
-
-<!-- APP -->
 <script>
-/* ===== Helpers ===== */
+/* ===== Small helpers ===== */
 const $=s=>document.querySelector(s), uid=()=>Math.random().toString(36).slice(2,9);
 const DEVKEY="razem-device-id"; let deviceId=localStorage.getItem(DEVKEY); if(!deviceId){deviceId="u_"+uid(); localStorage.setItem(DEVKEY,deviceId);}
 function esc(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]) )}
@@ -233,6 +244,11 @@ function esc(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt
 const HUB_KEY="razem-hub-v7"; let hub={docs:{},lastOpenId:null};
 function load(){const raw=localStorage.getItem(HUB_KEY); if(raw){try{hub=JSON.parse(raw)}catch{}}}
 function save(){localStorage.setItem(HUB_KEY,JSON.stringify(hub)); if($("#home").style.display==="block") renderHome(); if(curId && hub.docs[curId]) remotePut(hub.docs[curId]);}
+
+/* ===== Current user (client cache per email) ===== */
+let currentUser = { email:null, username:null };
+function loadLocalUser(email){ try{ return JSON.parse(localStorage.getItem("user:"+email)||"null"); }catch{return null;} }
+function saveLocalUser(email, obj){ localStorage.setItem("user:"+email, JSON.stringify(obj)); }
 
 /* ===== API helpers ===== */
 async function apiMe(){ try{ const r=await fetch('/api/me'); if(!r.ok) return null; return await r.json(); }catch{ return null; } }
@@ -247,11 +263,11 @@ async function setUsername(name){
 }
 
 /* ===== Undo/Redo ===== */
-const historyStack = [], redoStack = [];
+const historyStack=[], redoStack=[];
+function structClone(o){return (typeof structuredClone==='function')?structuredClone(o):JSON.parse(JSON.stringify(o));}
 function snapshot(){ if(!curId) return; const d=structClone(hub.docs[curId]); historyStack.push(d); if(historyStack.length>60) historyStack.shift(); redoStack.length=0; }
 function undo(){ const prev=historyStack.pop(); if(!prev) return; redoStack.push(structClone(hub.docs[curId])); hub.docs[curId]=prev; save(); openDoc(curId); }
 function redo(){ const next=redoStack.pop(); if(!next) return; historyStack.push(structClone(hub.docs[curId])); hub.docs[curId]=next; save(); openDoc(curId); }
-function structClone(o){ return (typeof structuredClone==='function') ? structuredClone(o) : JSON.parse(JSON.stringify(o)); }
 document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){ e.preventDefault(); e.shiftKey?redo():undo(); }});
 
 /* ===== Docs ===== */
@@ -336,12 +352,11 @@ function addBranchFromSelection(){
   const sel=window.getSelection(); if(!sel.rangeCount||sel.isCollapsed){alert("Zaznacz tekst."); return;}
   snapshot();
   const r=sel.getRangeAt(0); const anchorId="a_"+uid(); const wrap=document.createElement("span");
-  wrap.className="branch-anchor"; wrap.id=anchorId; wrap.appendChild(r.cloneContents());
-  r.deleteContents(); r.insertNode(wrap); sel.removeAllRanges();
+  wrap.className="branch-anchor"; wrap.id=anchorId; wrap.appendChild(r.cloneContents()); r.deleteContents(); r.insertNode(wrap); sel.removeAllRanges();
   const bid="b_"+uid(); spawnInlineTag(anchorId);
   const q=wrap.textContent.trim().slice(0,180); const d=hub.docs[curId];
   if(!d.anchors[anchorId]) d.anchors[anchorId]=[]; d.anchors[anchorId].push(bid);
-  d.branches[bid]={id:bid,anchorId,quoteText:q,title:"",body:"",comments:[],reactions:{plus:[],wiki:[]},owner:deviceId,posted:false,created:new Date().toISOString(),updated:new Date().toISOString()};
+  d.branches[bid]={id:bid,anchorId,quoteText:q,title:"",body:"",comments:[],reactions:{plus:[],wiki:[]},owner:deviceId,username:currentUser.username||"anon",posted:false,created:new Date().toISOString(),updated:new Date().toISOString()};
   d.html=$("#page").innerHTML; d.updated=new Date().toISOString(); save(); openBranch(bid,true);
 }
 $("#add-branch").onclick=addBranchFromSelection;
@@ -364,12 +379,12 @@ function openAnchorMenu(el){
   pop.innerHTML="";
   const add=document.createElement("div"); add.className="pop-item"; add.textContent="Dodaj nowy branch"; add.onclick=()=>{pop.style.display="none"; const a=document.getElementById(aid); if(!a) return; const range=document.createRange(); range.selectNodeContents(a); const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range); addBranchFromSelection(); };
   pop.appendChild(add);
-  arr.forEach(bid=>{const b=d.branches[bid]; const it=document.createElement("div"); it.className="pop-item"; it.textContent=(b.title||b.quoteText||"branch").slice(0,80); it.onclick=()=>{pop.style.display="none"; openBranch(bid);} ; pop.appendChild(it);});
+  arr.forEach(bid=>{const b=d.branches[bid]; const it=document.createElement("div"); it.className="pop-item"; it.textContent=((b.title? b.title+" — ":"") + (b.username? "@"+b.username:"")).slice(0,80); it.onclick=()=>{pop.style.display="none"; openBranch(bid);} ; pop.appendChild(it);});
   pop.style.left=(rect.left+window.scrollX)+"px"; pop.style.top=(rect.bottom+window.scrollY+6)+"px"; pop.style.display="block";
 }
 document.addEventListener("click",(e)=>{ if(pop.style.display==="block" && !pop.contains(e.target) && !e.target.classList.contains("inline-tag")) pop.style.display="none"; });
 
-/* drawer */
+/* drawer open/close */
 function openBranch(bid,newly=false){
   curBranchId=bid; const b=hub.docs[curId].branches[bid];
   if(b.posted){
@@ -377,7 +392,7 @@ function openBranch(bid,newly=false){
     $("#b-locked").style.display="block";
     $("#post-section").style.display="block";
     $("#drawer-title").textContent=b.title||"Branch";
-    $("#b-view-title").textContent=b.title||"(bez tytułu)";
+    $("#b-view-title").textContent=(b.title||"(bez tytułu)") + (b.username? " — @"+b.username:"");
     $("#b-view-body").textContent=b.body||"";
   }else{
     $("#b-editable").style.display="block";
@@ -395,16 +410,22 @@ function openBranch(bid,newly=false){
 function closeDrawer(){ $("#drawer").style.display="none"; curBranchId=null }
 $("#drawer-close").onclick=closeDrawer;
 
+/* draggable drawer */
+(()=>{
+  const el=$("#drawer"), head=$("#drawer-head"); let sx,sy,ox,oy,drag=false;
+  head.addEventListener("mousedown",(e)=>{drag=true; sx=e.clientX; sy=e.clientY; const r=el.getBoundingClientRect(); ox=r.left; oy=r.top; document.body.style.userSelect="none";});
+  window.addEventListener("mousemove",(e)=>{if(!drag) return; el.style.left=(ox+e.clientX-sx)+"px"; el.style.top=(oy+e.clientY-sy)+"px"; el.style.right="auto"; el.style.bottom="auto";});
+  window.addEventListener("mouseup",()=>{drag=false; document.body.style.userSelect="";});
+})();
+
 /* publish/edit/delete */
-$("#b-post").onclick=()=>{const b=branch(); if(!b) return; const t=$("#b-title").value.trim(), body=$("#b-body").value.trim(); if(!t||!body){alert("Podaj tytuł i treść."); return;} snapshot(); b.title=t; b.body=body; b.posted=true; b.updated=new Date().toISOString(); save(); openBranch(b.id);};
+$("#b-post").onclick=()=>{const b=branch(); if(!b) return; const t=$("#b-title").value.trim(), body=$("#b-body").value.trim(); if(!t||!body){alert("Podaj tytuł i treść."); return;} snapshot(); b.title=t; b.body=body; b.username=currentUser.username||b.username; b.posted=true; b.updated=new Date().toISOString(); save(); openBranch(b.id);};
 $("#b-edit").onclick=()=>{const b=branch(); if(!b) return; if(b.owner!==deviceId){alert("Tylko autor może edytować wpis."); return;} $("#b-editable").style.display="block"; $("#b-locked").style.display="none"; $("#post-section").style.display="none"; $("#b-title").value=b.title||""; $("#b-body").value=b.body||""; $("#b-title").focus();};
 $("#b-delete").onclick=()=>{const d=hub.docs[curId]; const b=d.branches[curBranchId]; if(!b) return; if(!confirm("Usunąć brancha?")) return; snapshot();
   const tag=document.querySelector(`.inline-tag[data-anchor='${b.anchorId}']`); const anchor=document.getElementById(b.anchorId);
   d.anchors[b.anchorId]=(d.anchors[b.anchorId]||[]).filter(x=>x!==b.id);
-  if(d.anchors[b.anchorId].length===0){
-    if(anchor){const p=anchor.parentNode; while(anchor.firstChild) p.insertBefore(anchor.firstChild,anchor); anchor.remove();}
-    if(tag) tag.remove(); delete d.anchors[b.anchorId];
-  } else { if(tag) tag.textContent=`branch ×${d.anchors[b.anchorId].length}`; }
+  if(d.anchors[b.anchorId].length===0){ if(anchor){const p=anchor.parentNode; while(anchor.firstChild) p.insertBefore(anchor.firstChild,anchor); anchor.remove(); } if(tag) tag.remove(); delete d.anchors[b.anchorId]; }
+  else{ if(tag) tag.textContent=`branch ×${d.anchors[b.anchorId].length}`; }
   delete d.branches[b.id]; d.html=$("#page").innerHTML; d.updated=new Date().toISOString(); save(); closeDrawer();
 };
 function branch(){return hub.docs[curId].branches[curBranchId]}
@@ -435,18 +456,19 @@ function toggleOne(b,key){
 
 /* comments */
 $("#reply-btn").onclick=addReply; $("#reply-text").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault(); addReply();}});
-function addReply(){const b=branch(); if(!b||!b.posted) return; const t=$("#reply-text").value.trim(); if(!t) return; snapshot(); b.comments.push({id:"c_"+uid(),userId:deviceId,text:t,ts:new Date().toISOString()}); $("#reply-text").value=""; b.updated=new Date().toISOString(); save(); renderComments(b);}
+function addReply(){const b=branch(); if(!b||!b.posted) return; const t=$("#reply-text").value.trim(); if(!t) return; snapshot(); b.comments.push({id:"c_"+uid(),userId:deviceId,username:currentUser.username||"anon",text:t,ts:new Date().toISOString()}); $("#reply-text").value=""; b.updated=new Date().toISOString(); save(); renderComments(b);}
 function deleteComment(cid){const b=branch(); if(!b) return; snapshot(); b.comments=b.comments.filter(c=>!(c.id===cid && c.userId===deviceId)); b.updated=new Date().toISOString(); save(); renderComments(b);}
 function renderComments(b){
   const box=$("#comments"); box.innerHTML="";
   if(!b.comments.length){ box.innerHTML=`<div class="muted"><i>Brak odpowiedzi.</i></div>`; return }
   b.comments.forEach(c=>{
     const el=document.createElement("div"); el.className="comment";
-    const initial=(c.userId?.slice(-1)||"U").toUpperCase();
+    const initial=(c.username?.[0] || c.userId?.slice(-1) || "U").toUpperCase();
+    const display='@'+(c.username||'anon');
     el.innerHTML=`<div class="avatar">${initial}</div>
       <div style="min-width:0">
         <div style="word-wrap:break-word; white-space:pre-wrap">${esc(c.text)}</div>
-        <div class="meta">${new Date(c.ts).toLocaleString()}</div>
+        <div class="meta">${display} • ${new Date(c.ts).toLocaleString()}</div>
       </div>
       ${c.userId===deviceId?'<button class="del" data-cid="'+c.id+'">Usuń</button>':''}`;
     box.appendChild(el);
@@ -473,7 +495,7 @@ function openOverview(mode){
         <strong>${esc(b.title||"(bez tytułu)")}</strong>
         <span class="muted" style="margin-left:auto">${new Date(b.created).toLocaleString()}</span>
       </div>
-      <div class="muted" style="margin-top:4px">„${esc(b.quoteText||"")}”</div>
+      <div class="muted" style="margin-top:4px">„${esc(b.quoteText||"")}” ${b.username?('— @'+esc(b.username)):""}</div>
       <div class="row" style="margin-top:6px">
         <button class="tbtn" data-open="${b.id}">Otwórz</button>
         <button class="tbtn" data-jump="${b.anchorId}">Pokaż w tekście</button>
@@ -489,7 +511,7 @@ function openOverview(mode){
 /* Scroll & highlight */
 function scrollAndHighlight(anchorId){
   const el=document.getElementById(anchorId);
-  if(!el){alert("Nie znaleziono fragmentu."); return;}
+  if(!el){alert("Nie znaleziono fragmentu (może został usunięty)."); return;}
   el.scrollIntoView({block:"center",behavior:"smooth"});
   el.classList.add("flash");
   setTimeout(()=>el.classList.remove("flash"),2400);
@@ -510,12 +532,29 @@ $("#home-docx").addEventListener("change",async(e)=>{const file=e.target.files?.
 
 /* ===== Username flow + initial load ===== */
 async function ensureUsername() {
-  const me = await apiMe();
-  if (!me || !me.ok) return; // jeśli Access nie działa, nic nie zrobimy
-  const badge = document.getElementById('user-badge');
-  if (me.username) { if (badge) badge.textContent = '@' + me.username; return true; }
+  const me = await apiMe();           // { ok, email, username } jeśli Access działa
+  if (!me || !me.ok) return;          // brak Access: frontend działa tylko lokalnie
+  currentUser.email = me.email || null;
 
-  // pokaż overlay
+  const badge = document.getElementById('user-badge');
+
+  // 1) jeśli mamy zapis lokalny dla tego maila, użyj
+  const local = me.email ? loadLocalUser(me.email) : null;
+  if (local?.username) {
+    currentUser.username = local.username;
+    if (badge) badge.textContent = '@' + local.username;
+    return true;
+  }
+
+  // 2) jeśli backend już zna username
+  if (me.username) {
+    currentUser.username = me.username;
+    if (me.email) saveLocalUser(me.email, { username: me.username });
+    if (badge) badge.textContent = '@' + me.username;
+    return true;
+  }
+
+  // 3) poproś o username
   const overlay = document.getElementById('username-overlay');
   const input = document.getElementById('username-input');
   const saveBtn = document.getElementById('username-save');
@@ -532,6 +571,8 @@ async function ensureUsername() {
       if (!/^[a-z0-9_]{3,20}$/.test(name)) { err.textContent = 'Niepoprawny format username.'; return; }
       try {
         await setUsername(name);
+        currentUser.username = name;
+        if (me.email) saveLocalUser(me.email, { username: name });
         if (badge) badge.textContent = '@' + name;
         overlay.style.display = 'none';
         resolve(true);
@@ -549,10 +590,10 @@ async function ensureUsername() {
 window.addEventListener("load", async ()=>{
   load();
 
-  // 1) Wymuś wybór username (po Access)
+  // 1) username / Access
   await ensureUsername();
 
-  // 2) Wczytaj z serwera listę dokumentów i scali z localStorage
+  // 2) zsynchronizuj listę dokumentów z KV
   const list = await remoteList();
   if (list && Array.isArray(list.ids)) {
     for (const id of list.ids) {
@@ -571,3 +612,4 @@ window.addEventListener("load", async ()=>{
 </script>
 </body>
 </html>
+
