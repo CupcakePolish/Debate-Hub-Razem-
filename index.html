@@ -15,7 +15,6 @@
   body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial}
   button,input,textarea{font:inherit;color:inherit}
   
-
   /* Header */
   header.appbar{position:sticky;top:0;z-index:100;background:linear-gradient(90deg,var(--rzm-accent),var(--rzm-accent-2));color:#fff;box-shadow:var(--shadow-sm)}
   .appbar-inner{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
@@ -44,26 +43,20 @@
   .tbtn{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;font-weight:700;color:#5b0c66}
   .tbtn.primary{background:linear-gradient(180deg,var(--rzm-accent-3),var(--rzm-accent-2));color:#fff;border-color:#dc8ad2}
 
-/* === anchor popover (menu branchy) === */
-.popover{
-  position:absolute;
-  display:none;
-  z-index:95;
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:10px;
-  box-shadow:var(--shadow-sm);
-  padding:6px;
-  min-width:260px;
-}
-.popover .pop-item{
-  padding:8px 10px;
-  border-radius:8px;
-  cursor:pointer;
-}
-.popover .pop-item:hover{
-  background:#f6eaf4;
-}
+  /* === anchor popover (menu branchy) === */
+  .popover{
+    position:absolute;
+    display:none;
+    z-index:95;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+    box-shadow:var(--shadow-sm);
+    padding:6px;
+    min-width:260px;
+  }
+  .popover .pop-item{ padding:8px 10px; border-radius:8px; cursor:pointer; }
+  .popover .pop-item:hover{ background:#f6eaf4; }
 
   /* Canvas */
   .canvas{display:grid;grid-template-columns:1fr min(900px,92vw) 1fr}
@@ -125,9 +118,9 @@
       <button class="btn purple" id="home-new">Nowy pusty</button>
       <label class="btn">Import projektu <input id="home-import" type="file" accept="application/json" hidden /></label>
       <button class="btn" id="home-clear">Wyczyść wszystko</button>
-     
-      
 
+      <!-- ADDED: shows current username once logged in -->
+      <span id="user-badge" style="opacity:.8;margin-left:8px;"></span>
     </div>
     <div class="bar-actions" id="doc-actions" style="display:none">
       <button class="btn" id="back-home">Transkrypty</button>
@@ -145,6 +138,17 @@
     <h2 style="margin:6px 0 10px">Twoje transkrypty</h2>
     <div id="doc-list" class="grid cols-3"></div>
     <p id="empty-home" class="muted" style="font-style:italic;margin-top:8px">Brak dokumentów. Dodaj .docx lub utwórz pusty.</p>
+  </div>
+
+  <!-- ADDED: simple save-edit test (writes to KV) -->
+  <div class="panel" id="edit-box">
+    <h3 style="margin:0 0 8px">Szybki test zapisu</h3>
+    <div class="row" style="gap:8px;margin-bottom:6px">
+      <input id="doc-id" class="input" value="debate-001" style="max-width:240px" />
+      <button id="save-edit" class="btn">Zapisz zmianę</button>
+    </div>
+    <textarea id="edit-text" rows="4" class="input" placeholder="Napisz coś i kliknij Zapisz zmianę…"></textarea>
+    <div id="edit-result" class="muted" style="margin-top:6px"></div>
   </div>
 </main>
 
@@ -273,7 +277,7 @@
 /* ===== Helpers ===== */
 const $=s=>document.querySelector(s), uid=()=>Math.random().toString(36).slice(2,9);
 const DEVKEY="razem-device-id"; let deviceId=localStorage.getItem(DEVKEY); if(!deviceId){deviceId="u_"+uid(); localStorage.setItem(DEVKEY,deviceId);}
-function esc(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function esc(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]) )}
 
 const HUB_KEY="razem-hub-v7"; let hub={docs:{},lastOpenId:null};
 function load(){const raw=localStorage.getItem(HUB_KEY); if(raw){try{hub=JSON.parse(raw)}catch{}}}
@@ -551,5 +555,56 @@ $("#home-docx").addEventListener("change",async(e)=>{const file=e.target.files?.
 /* Init */
 window.addEventListener("load",()=>{load(); if(Object.keys(hub.docs).length===0){renderHome(); return;} if(hub.lastOpenId && hub.docs[hub.lastOpenId]) openDoc(hub.lastOpenId); else renderHome();});
 </script>
+
+<!-- ADDED: show @username in header -->
+<script>
+(async () => {
+  try {
+    const r = await fetch('/api/me');
+    if (r.ok) {
+      const me = await r.json();
+      if (me.username) {
+        const el = document.getElementById('user-badge');
+        if (el) el.textContent = '@' + me.username;
+      }
+    }
+  } catch (e) {
+    console.warn('me failed', e);
+  }
+})();
+</script>
+
+<!-- ADDED: minimal “save edit” hook to /api/save-edit -->
+<script>
+(() => {
+  const btn = document.getElementById('save-edit');
+  if (!btn) return;
+
+  btn.addEventListener('click', async () => {
+    const docId = document.getElementById('doc-id').value || 'debate-001';
+    const text = document.getElementById('edit-text').value.trim();
+    if (!text) { alert('Wpisz zmianę'); return; }
+
+    const res = document.getElementById('edit-result');
+    res.textContent = 'Zapisywanie...';
+
+    const r = await fetch('/api/save-edit', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ docId, change: { type: 'note', text } })
+    });
+
+    if (!r.ok) {
+      res.textContent = 'Błąd: ' + (await r.text());
+      return;
+    }
+
+    const data = await r.json();
+    res.textContent = 'Zapisano: ' + data.key;
+    document.getElementById('edit-text').value = '';
+  });
+})();
+</script>
 </body>
 </html>
+
