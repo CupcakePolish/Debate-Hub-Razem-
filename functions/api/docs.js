@@ -1,5 +1,16 @@
 // functions/api/docs.js
-// Wspólny (globalny) indeks dokumentów, widoczny dla wszystkich zalogowanych przez Access.
+
+// Klucze w KV_EDITS (globalne, wspólne)
+//  - 'docs_index'  -> JSON: { ids: [...] }
+//  - 'doc:{id}'    -> obiekt dokumentu { id, title, desc, yt, html, branches, anchors, ownerUserId, ownerUsername, created, updated }
+
+async function getMe(env, request) {
+  const email = request.headers.get('cf-access-authenticated-user-email') || null;
+  if (!email) return null;
+  const user = await env.KV_USERS.get(`user:${email.toLowerCase()}`, { type: 'json' });
+  if (!user) return { userId: email.toLowerCase(), email, username: null };
+  return { userId: user.userId || email.toLowerCase(), email, username: user.username || null };
+}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -8,76 +19,77 @@ function json(data, status = 200) {
   });
 }
 
-// Pobranie emaila z nagłówka Access (wymagamy zalogowania, ale NIE dzielimy danych po użytkowniku)
-async function getUser(request, env) {
-  const email = request.headers.get('cf-access-authenticated-user-email') || null;
-  if (!email) return null;
-  // opcjonalnie można doczytać username z KV_USERS, ale nie jest potrzebne do samego dostępu
-  return { email, userId: email.toLowerCase() };
-}
-
 export const onRequestGet = async ({ request, env }) => {
   const url = new URL(request.url);
-  const id = url.searchParams.get("id");
-  const me = await getUser(request, env);
-  if (!me) return new Response("unauthorized", { status: 401 });
+  const id = url.searchParams.get('id');
 
-  const idxKey = "docs_index"; // <<< GLOBAL
   if (!id) {
-    const list = (await env.KV_EDITS.get(idxKey, { type: "json" })) || [];
-    return json({ ok: true, ids: list });
+    // lista wszystkich dokumentów (globalny index)
+    const idx = (await env.KV_EDITS.get('docs_index', { type: 'json' })) || { ids: [] };
+    return json({ ok: true, ids: Array.from(new Set(idx.ids)) });
   } else {
-    const docKey = `docs:${id}`;
-    const doc = await env.KV_EDITS.get(docKey, { type: "json" });
-    if (!doc) return new Response("not_found", { status: 404 });
+    const doc = await env.KV_EDITS.get(`doc:${id}`, { type: 'json' });
+    if (!doc) return json({ error: 'not_found' }, 404);
     return json(doc);
   }
 };
 
 export const onRequestPost = async ({ request, env }) => {
-  const me = await getUser(request, env);
-  if (!me) return new Response("unauthorized", { status: 401 });
+  const me = await getMe(env, request);
+  if (!me) return new Response('unauthorized', { status: 401 });
 
   const body = await request.json().catch(() => ({}));
   const { id, doc } = body || {};
-  if (!id || !doc) return new Response("bad_request", { status: 400 });
+  if (!id || !doc) return new Response('bad_request', { status: 400 });
 
-  const idxKey = "docs_index"; // <<< GLOBAL
-  const docKey = `docs:${id}`;
+  // jeśli dokument nie istnieje, ustaw właściciela
+  const existing = await env.KV_EDITS.get(`doc:${id}`, { type: 'json' });
 
-  // zapisz dokument
-  await env.KV_EDITS.put(docKey, JSON.stringify(doc));
+  const toSave = {
+    id,
+    title: doc.title || '',
+    desc: doc.desc || '',
+    yt: doc.yt || '',
+    html: doc.html || '',
+    branches: doc.branches || {},
+    anchors: doc.anchors || {},
+    ownerUserId: existing?.ownerUserId || doc.ownerUserId || me.userId,
+    ownerUsername: existing?.ownerUsername || doc.ownerUsername || (me.username || ''),
+    created: existing?.created || doc.created || new Date().toISOString(),
+    updated: new Date().toISOString(),
+  };
 
-  // dopisz do indeksu (unikalnie)
-  const list = (await env.KV_EDITS.get(idxKey, { type: "json" })) || [];
-  if (!list.includes(id)) {
-    list.push(id);
-    await env.KV_EDITS.put(idxKey, JSON.stringify(list));
-  }
+  await env.KV_EDITS.put(`doc:${id}`, JSON.stringify(toSave), { metadata: { id } });
 
-  return json({ ok: true });
+  // dopisz do globalnego indeksu
+  const idx = (await env.KV_EDITS.get('docs_index', { type: 'json' })) || { ids: [] };
+  if (!idx.ids.includes(id)) idx.ids.push(id);
+  await env.KV_EDITS.put('docs_index', JSON.stringify(idx));
+
+  return json({ ok: true, id });
 };
 
 export const onRequestDelete = async ({ request, env }) => {
+  const me = await getMe(env, request);
+  if (!me) return new Response('unauthorized', { status: 401 });
+
   const url = new URL(request.url);
-  const id = url.searchParams.get("id");
-  const me = await getUser(request, env);
-  if (!me) return new Response("unauthorized", { status: 401 });
+  const id = url.searchParams.get('id');
+  if (!id) return new Response('bad_request', { status: 400 });
 
-  if (!id) return new Response("bad_request", { status: 400 });
+  const doc = await env.KV_EDITS.get(`doc:${id}`, { type: 'json' });
+  if (!doc) return new Response('not_found', { status: 404 });
 
-  const idxKey = "docs_index"; // <<< GLOBAL
-  const docKey = `docs:${id}`;
-
-  // usuń dokument
-  await env.KV_EDITS.delete(docKey);
-
-  // usuń z indeksu
-  const list = (await env.KV_EDITS.get(idxKey, { type: "json" })) || [];
-  const next = list.filter(x => x !== id);
-  if (next.length !== list.length) {
-    await env.KV_EDITS.put(idxKey, JSON.stringify(next));
+  // kasować może tylko właściciel
+  if (doc.ownerUserId && doc.ownerUserId !== me.userId) {
+    return new Response('forbidden', { status: 403 });
   }
+
+  await env.KV_EDITS.delete(`doc:${id}`);
+
+  const idx = (await env.KV_EDITS.get('docs_index', { type: 'json' })) || { ids: [] };
+  const next = { ids: idx.ids.filter((x) => x !== id) };
+  await env.KV_EDITS.put('docs_index', JSON.stringify(next));
 
   return json({ ok: true });
 };
