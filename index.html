@@ -587,13 +587,14 @@ async function ensureUsername() {
   });
 }
 
-window.addEventListener("load", async ()=>{
+window.addEventListener("load", async () => {
+  // 1) Wczytaj dane lokalne
   load();
 
-  // 1) username / Access
+  // 2) Upewnij się, że username jest ustawiony (po Cloudflare Access)
   await ensureUsername();
 
-  // 2) zsynchronizuj listę dokumentów z KV
+  // 3) Zsynchronizuj globalną listę dokumentów z KV
   const list = await remoteList();
   if (list && Array.isArray(list.ids)) {
     for (const id of list.ids) {
@@ -602,13 +603,18 @@ window.addEventListener("load", async ()=>{
         if (d && d.id) hub.docs[id] = d;
       }
     }
-    save();
   }
 
-  // 3) Otwórz ostatni dokument, albo HOME
-  if(Object.keys(hub.docs).length===0){renderHome(); return;}
-  if(hub.lastOpenId && hub.docs[hub.lastOpenId]) openDoc(hub.lastOpenId); else renderHome();
+  save();
+
+  // 4) Po odświeżeniu wróć tam, gdzie byłeś (jeśli dokument istnieje)
+  if (hub.lastOpenId && hub.docs[hub.lastOpenId]) {
+    openDoc(hub.lastOpenId);
+  } else {
+    renderHome();
+  }
 });
+
 </script>
 </body>
 </html>
