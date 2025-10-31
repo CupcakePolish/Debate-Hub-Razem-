@@ -1,30 +1,46 @@
-// functions/api/setup.js
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'content-type': 'application/json' },
+  });
+}
+
 export const onRequestPost = async ({ request, env }) => {
-  const email = request.headers.get("cf-access-authenticated-user-email") || null;
-  if (!email) return new Response("unauthorized", { status: 401 });
+  // Wymaga Cloudflare Access (email w nagłówku)
+  const email =
+    request.headers.get('cf-access-authenticated-user-email') || null;
+  if (!email) return new Response('unauthorized', { status: 401 });
 
   const body = await request.json().catch(() => ({}));
-  let { username } = body || {};
-  if (!username || typeof username !== "string") return new Response("bad username", { status: 400 });
-  username = username.trim().toLowerCase();
-  if (!/^[a-z0-9_]{3,20}$/.test(username)) return new Response("invalid_format", { status: 400 });
+  const username = String(body.username || '').trim().toLowerCase();
 
-  // unikalność
-  const taken = await env.KV_USERS.get(`username:${username}`);
-  if (taken) return new Response("taken", { status: 409 });
+  if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+    return new Response('bad_username', { status: 400 });
+  }
 
-  const userKey = `user:${email.toLowerCase()}`;
-  const user = await env.KV_USERS.get(userKey, { type: "json" });
-  if (!user) return new Response("no_user", { status: 404 });
+  const userId = email.toLowerCase();
 
-  if (user.username) await env.KV_USERS.delete(`username:${user.username}`);
+  // Czy nazwa już zajęta przez kogoś innego?
+  const taken = await env.KV_USERS.get(`name:${username}`, { type: 'json' });
+  if (taken && taken.userId !== userId) {
+    return new Response('taken', { status: 409 });
+  }
 
-  user.username = username;
-  await env.KV_USERS.put(userKey, JSON.stringify(user));
-  await env.KV_USERS.put(`username:${username}`, JSON.stringify({ email: user.email, userId: user.userId }));
-  await env.KV_USERS.put(`userid:${user.userId}`, JSON.stringify({ email: user.email, username }));
+  // Zapis/aktualizacja profilu użytkownika
+  await env.KV_USERS.put(
+    `user:${userId}`,
+    JSON.stringify({ userId, email: userId, username })
+  );
 
-  return new Response(JSON.stringify({ ok: true, username }), {
-    headers: { "content-type": "application/json" },
-  });
+  // Rezerwacja nazwy -> mapowanie name -> userId
+  await env.KV_USERS.put(`name:${username}`, JSON.stringify({ userId }));
+
+  return json({ ok: true, username });
+};
+
+// (opcjonalnie) odrzucamy inne metody elegancko
+export const onRequest = async ({ request }) => {
+  if (request.method !== 'POST') {
+    return new Response('method_not_allowed', { status: 405 });
+  }
 };
