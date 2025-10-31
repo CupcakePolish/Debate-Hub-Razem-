@@ -1,55 +1,67 @@
-// /functions/api/docs.js
-import { getEmailFromRequest, okJson, badRequest } from '../_utils';
-
-// Keys in KV_EDITS:
-//   doc:<id>           -> JSON document
-// We will list with prefix "doc:" to discover docs.
-
-export async function onRequest({ request, env }) {
-  const method = request.method;
-
-  // Make sure request is authenticated (has email)
-  const email = getEmailFromRequest(request);
-  if (!email) return new Response('Unauthorized', { status: 401 });
-
-  if (!env.KV_EDITS) return new Response('KV not bound', { status: 500 });
-
-  const url = new URL(request.url);
-  const id = url.searchParams.get('id');
-
-  if (method === 'GET') {
-    if (id) {
-      const doc = await env.KV_EDITS.get(`doc:${id}`, { type: 'json' });
-      if (!doc) return new Response('Not found', { status: 404 });
-      return okJson(doc);
-    } else {
-      const items = [];
-      let cursor;
-      do {
-        const page = await env.KV_EDITS.list({ prefix: 'doc:', cursor });
-        for (const k of page.keys) {
-          items.push(k.name.slice(4)); // strip "doc:"
-        }
-        cursor = page.cursor;
-      } while (cursor);
-      return okJson({ ids: items });
-    }
-  }
-
-  if (method === 'POST') {
-    let body;
-    try { body = await request.json(); } catch { return badRequest('Invalid JSON'); }
-    const { id: docId, doc } = body || {};
-    if (!docId || !doc) return badRequest('id and doc required');
-    await env.KV_EDITS.put(`doc:${docId}`, JSON.stringify(doc));
-    return okJson({ ok: true, id: docId });
-  }
-
-  if (method === 'DELETE') {
-    if (!id) return badRequest('id required');
-    await env.KV_EDITS.delete(`doc:${id}`);
-    return okJson({ ok: true, id });
-  }
-
-  return new Response('Method not allowed', { status: 405 });
+// functions/api/docs.js
+async function getUser(env, request) {
+  const email = request.headers.get("cf-access-authenticated-user-email") || null;
+  if (!email) return null;
+  const user = await env.KV_USERS.get(`user:${email.toLowerCase()}`, { type: "json" });
+  return user || null;
 }
+
+export const onRequestGet = async ({ request, env }) => {
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id");
+  const me = await getUser(env, request);
+  if (!me) return new Response("unauthorized", { status: 401 });
+
+  if (!id) {
+    // lista id
+    const idxKey = `docs_index:${me.userId}`;
+    const list = (await env.KV_DOCS.get(idxKey, { type: "json" })) || [];
+    return new Response(JSON.stringify({ ok: true, ids: list }), { headers: { "content-type": "application/json" } });
+  } else {
+    const docKey = `doc:${me.userId}:${id}`;
+    const doc = await env.KV_DOCS.get(docKey, { type: "json" });
+    if (!doc) return new Response("not_found", { status: 404 });
+    return new Response(JSON.stringify(doc), { headers: { "content-type": "application/json" } });
+  }
+};
+
+export const onRequestPost = async ({ request, env }) => {
+  const me = await getUser(env, request);
+  if (!me) return new Response("unauthorized", { status: 401 });
+  const body = await request.json().catch(() => ({}));
+  const { id, doc } = body || {};
+  if (!id || !doc) return new Response("bad_request", { status: 400 });
+
+  const idxKey = `docs_index:${me.userId}`;
+  const docKey = `doc:${me.userId}:${id}`;
+
+  // zapisz dokument
+  await env.KV_DOCS.put(docKey, JSON.stringify(doc));
+
+  // upewnij się, że jest na liście
+  const list = (await env.KV_DOCS.get(idxKey, { type: "json" })) || [];
+  if (!list.includes(id)) {
+    list.push(id);
+    await env.KV_DOCS.put(idxKey, JSON.stringify(list));
+  }
+
+  return new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json" } });
+};
+
+export const onRequestDelete = async ({ request, env }) => {
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id");
+  const me = await getUser(env, request);
+  if (!me) return new Response("unauthorized", { status: 401 });
+  if (!id) return new Response("bad_request", { status: 400 });
+
+  const idxKey = `docs_index:${me.userId}`;
+  const docKey = `doc:${me.userId}:${id}`;
+
+  await env.KV_DOCS.delete(docKey);
+  const list = (await env.KV_DOCS.get(idxKey, { type: "json" })) || [];
+  const next = list.filter(x => x !== id);
+  await env.KV_DOCS.put(idxKey, JSON.stringify(next));
+
+  return new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json" } });
+};
