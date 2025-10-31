@@ -14,17 +14,9 @@
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{
-    margin:0;background:var(--bg);color:var(--ink);
-    font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial;
-    padding-top: 60px; /* header */
-  }
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial;padding-top:60px}
 
-  header.appbar{
-    position:fixed;top:0;left:0;right:0;z-index:100;
-    background:linear-gradient(90deg,var(--accent),var(--accent2));
-    color:#fff;box-shadow:var(--shadow-sm)
-  }
+  header.appbar{position:fixed;top:0;left:0;right:0;z-index:100;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;box-shadow:var(--shadow-sm)}
   .appbar-inner{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
   .brand{display:flex;gap:10px;align-items:center;cursor:pointer}
   .logo{background:#fff;color:#5f0d62;font-weight:900;padding:6px 10px;border-radius:8px}
@@ -46,17 +38,8 @@
 
   #doc{display:none}
 
-  /* fixed toolbar traveling down */
-  .toolbar-fixed{
-    position:fixed;left:0;right:0;top:60px;z-index:90;
-    padding:6px 18px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,255,255,.92));
-    backdrop-filter: blur(6px); border-bottom:1px solid var(--line);
-  }
-  .toolbar{
-    display:flex;gap:8px;flex-wrap:wrap;margin:0 auto;
-    max-width:1200px; background:#fff;border:1px solid var(--line);
-    border-radius:12px;box-shadow:var(--shadow-sm);padding:10px
-  }
+  .toolbar-fixed{position:fixed;left:0;right:0;top:60px;z-index:90;padding:6px 18px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,255,255,.92));backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 auto;max-width:1200px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-sm);padding:10px}
   .tbtn{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;font-weight:700;color:#5b0c66}
   .tbtn.primary{background:linear-gradient(180deg,var(--accent3),var(--accent2));color:#fff;border-color:#dc8ad2}
   .tbtn.icon{padding:2px 8px;font-weight:700}
@@ -64,11 +47,7 @@
   .toolbar-spacer{height:calc(var(--toolbar-h) + 16px)}
 
   .canvas{display:grid;grid-template-columns:1fr min(900px,92vw) 1fr}
-  .page{
-    grid-column:2;background:var(--paper);min-height:70vh;margin:14px 0;padding:96px 96px;
-    box-shadow:var(--shadow);border-radius:6px;
-    cursor:text; caret-color:#111; /* caret visible */
-  }
+  .page{grid-column:2;background:var(--paper);min-height:70vh;margin:14px 0;padding:96px 96px;box-shadow:var(--shadow);border-radius:6px;cursor:text;caret-color:#111}
 
   .meta-box{grid-column:2;margin-top:12px;margin-bottom:8px}
   .meta-box .panel{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -79,14 +58,8 @@
   .meta-line{display:flex;gap:8px;align-items:center}
   .meta-line a{color:#5b0c66;text-decoration:underline}
 
-  .branch-anchor{
-    background:linear-gradient(0deg,rgba(160,35,127,.12),rgba(160,35,127,.12));
-    border-bottom:2px solid var(--accent2);border-radius:6px;padding:0 3px
-  }
-  .inline-tag{
-    display:inline-flex;gap:6px;align-items:center;border:1px solid #e9d3ee;background:#faf2fb;color:#5c0d66;
-    padding:1px 8px;border-radius:999px;font-size:12px;margin-left:6px;cursor:pointer;pointer-events:auto
-  }
+  .branch-anchor{background:linear-gradient(0deg,rgba(160,35,127,.12),rgba(160,35,127,.12));border-bottom:2px solid var(--accent2);border-radius:6px;padding:0 3px}
+  .inline-tag{display:inline-flex;gap:6px;align-items:center;border:1px solid #e9d3ee;background:#faf2fb;color:#5c0d66;padding:1px 8px;border-radius:999px;font-size:12px;margin-left:6px;cursor:pointer;pointer-events:auto}
   .inline-tag,[contenteditable=false]{-webkit-user-select:none;user-select:none}
 
   .drawer{position:fixed;right:18px;bottom:18px;width:min(560px,96vw);max-height:84vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);display:none;z-index:80;resize:both}
@@ -112,15 +85,10 @@
   @keyframes flash {0%{box-shadow:0 0 0 0 rgba(210,61,148,.6)}100%{box-shadow:0 0 0 14px rgba(210,61,148,0)}}
   .flash{animation:flash 1.2s ease-out 0s 2}
 
-  /* username overlay */
   #username-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:120}
   #username-card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px;width:min(520px,95vw)}
 
-  /* little popover menu for branches */
-  #anchor-pop{
-    position:absolute;display:none;z-index:95; background:#fff; border:1px solid var(--line);
-    box-shadow:var(--shadow-sm); border-radius:10px; padding:6px; max-width:320px;
-  }
+  #anchor-pop{position:absolute;display:none;z-index:95;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow-sm);border-radius:10px;padding:6px;max-width:320px}
   #anchor-pop .item{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:4px 0;background:#fff;cursor:pointer}
 </style>
 </head>
@@ -210,7 +178,6 @@
         <div id="b-view-title" style="font-weight:800;margin-bottom:6px"></div>
         <div id="b-view-body" style="white-space:pre-wrap"></div>
       </div>
-
       <div class="sep"></div>
       <div class="muted" id="b-meta" style="font-size:12px;display:flex;align-items:center;gap:8px"></div>
     </div>
@@ -239,7 +206,6 @@
 
 <div id="anchor-pop"></div>
 
-<!-- Username overlay -->
 <div id="username-overlay">
   <div id="username-card">
     <h3 style="margin:0 0 8px">Wybierz swój username</h3>
@@ -260,7 +226,7 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&l
 const DEVKEY="razem-device-id"; let deviceId=localStorage.getItem(DEVKEY); if(!deviceId){deviceId="u_"+uid();localStorage.setItem(DEVKEY,deviceId);}
 
 /* ====== PAMIĘĆ LOKALNA STRONY ====== */
-const HUB_KEY="razem-hub-v9b";
+const HUB_KEY="razem-hub-v9c";
 let hub={docs:{}, lastOpenId:null};
 
 function load(){
@@ -452,21 +418,15 @@ $("#meta-edit-btn").onclick=()=>{const d=hub.docs[curId]; if(!canEditMeta(d)) re
 $("#page").addEventListener("input",()=>{const d=hub.docs[curId]; d.html=$("#page").innerHTML; d.updated=new Date().toISOString(); saveLocal({docId:curId});});
 $("#page").addEventListener("keydown",()=>{snapshot();},{capture:true});
 
-/* ====== STRONG PROTECTION + OPEN ON CLICK ====== */
-const pop=$("#anchor-pop");
-function hidePop(){ pop.style.display='none'; }
+/* ====== PROTECTION + CLICK ====== */
+const pop=$("#anchor-pop"); function hidePop(){ pop.style.display='none'; }
 document.addEventListener('click',(e)=>{
   const tag=e.target.closest('.inline-tag');
   const anch=e.target.closest('.branch-anchor');
   if(tag){ e.preventDefault(); openAnchorMenu(tag.dataset.anchor, tag); return;}
-  if(anch){ e.preventDefault(); // if user clicks highlighted text, show menu next to following tag or the range
-    const next=anch.nextElementSibling && anch.nextElementSibling.classList.contains('inline-tag') ? anch.nextElementSibling : null;
-    openAnchorMenu(anch.id, next || anch);
-    return;
-  }
+  if(anch){ e.preventDefault(); const next=anch.nextElementSibling && anch.nextElementSibling.classList.contains('inline-tag') ? anch.nextElementSibling : null; openAnchorMenu(anch.id, next || anch); return;}
   if(pop.style.display==='block' && !pop.contains(e.target)) hidePop();
 });
-
 function openAnchorMenu(anchorId, refEl){
   const d=hub.docs[curId]; const ids=(d.anchors[anchorId]||[]).slice();
   if(ids.length===0) return;
@@ -474,8 +434,7 @@ function openAnchorMenu(anchorId, refEl){
   pop.innerHTML='';
   ids.forEach(id=>{
     const b=d.branches[id]; const title=b.title||b.quoteText||"Branch";
-    const btn=document.createElement('button');
-    btn.className='item'; btn.textContent=title; btn.onclick=()=>{hidePop(); openBranch(id);};
+    const btn=document.createElement('button'); btn.className='item'; btn.textContent=title; btn.onclick=()=>{hidePop(); openBranch(id);};
     pop.appendChild(btn);
   });
   const r=refEl.getBoundingClientRect();
@@ -483,8 +442,6 @@ function openAnchorMenu(anchorId, refEl){
   pop.style.top = (r.bottom+6+window.scrollY)+'px';
   pop.style.display='block';
 }
-
-// helper: does selection content or boundary touch protected nodes
 function selectionTouches(selector){
   const sel=window.getSelection(); if(!sel.rangeCount) return false;
   const r=sel.getRangeAt(0);
@@ -496,30 +453,27 @@ function selectionTouches(selector){
   const fNode=(sel.focusNode?.nodeType===1? sel.focusNode : sel.focusNode?.parentElement);
   return aNode?.closest(selector) || fNode?.closest(selector);
 }
-// boundary check for Backspace/Delete next to protected elements
 function caretAdjacentToProtected(backspace=true){
   const sel=window.getSelection(); if(!sel.rangeCount) return false;
   const r=sel.getRangeAt(0); if(!r.collapsed) return false;
   let node=sel.anchorNode, offset=sel.anchorOffset;
   if(!node) return false;
-  if(node.nodeType===3){ // text node
+  if(node.nodeType===3){
     if(backspace && offset>0) return false;
     if(!backspace && offset < node.textContent.length) return false;
     const ref = backspace ? node.previousSibling : node.nextSibling;
     return !!(ref && (ref.nodeType===1) && (ref.classList?.contains('inline-tag')||ref.classList?.contains('branch-anchor')));
-  } else if(node.nodeType===1){ // element
+  } else if(node.nodeType===1){
     const child = node.childNodes[backspace ? offset-1 : offset];
     return !!(child && child.nodeType===1 && (child.classList?.contains('inline-tag')||child.classList?.contains('branch-anchor')));
   }
   return false;
 }
-
 $("#page").addEventListener("beforeinput",(e)=>{
   const destructive = e.inputType.startsWith("delete") || e.inputType==="insertParagraph" || e.inputType==="insertFromPaste";
   if(!destructive) return;
   if(selectionTouches(".inline-tag, .branch-anchor") || caretAdjacentToProtected(e.inputType.startsWith("deleteContentBackward"))){
-    e.preventDefault();
-    hidePop();
+    e.preventDefault(); hidePop();
   }
 });
 
@@ -604,10 +558,7 @@ function toggleOne(b,key){ if(!b.posted) return; b.reactions=b.reactions||{plus:
 $("#reply-btn").onclick=addReply; $("#reply-text").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault(); addReply();}});
 function addReply(){const b=branch(); if(!b||!b.posted) return; const t=$("#reply-text").value.trim(); if(!t) return; snapshot(); b.comments.push({id:"c_"+uid(),userId:me?.userId,text:t,username:currentUserLabel(),ts:new Date().toISOString()}); $("#reply-text").value=""; b.updated=new Date().toISOString(); saveLocal({docId:curId}); renderComments(b);}
 function deleteComment(cid){const b=branch(); if(!b) return; snapshot(); b.comments=b.comments.filter(c=>!(c.id===cid && c.userId===me?.userId)); b.updated=new Date().toISOString(); saveLocal({docId:curId}); renderComments(b);}
-function editComment(cid){const b=branch(); if(!b) return; const c=b.comments.find(x=>x.id===cid && x.userId===me?.userId); if(!c) return;
-  const newTxt = prompt("Edytuj komentarz:", c.text); if(newTxt==null) return;
-  snapshot(); c.text=newTxt.trim(); c.ts=new Date().toISOString(); b.updated=new Date().toISOString(); saveLocal({docId:curId}); renderComments(b);
-}
+function editComment(cid){const b=branch(); if(!b) return; const c=b.comments.find(x=>x.id===cid && x.userId===me?.userId); if(!c) return; const newTxt = prompt("Edytuj komentarz:", c.text); if(newTxt==null) return; snapshot(); c.text=newTxt.trim(); c.ts=new Date().toISOString(); b.updated=new Date().toISOString(); saveLocal({docId:curId}); renderComments(b);}
 function renderComments(b){
   const box=$("#comments"); box.innerHTML="";
   if(!b.comments.length){ box.innerHTML=`<div class="muted"><i>Brak odpowiedzi.</i></div>`; return }
@@ -663,7 +614,49 @@ function undo(){ const prev=historyStack.pop(); if(!prev) return; redoStack.push
 function redo(){ const next=redoStack.pop(); if(!next) return; historyStack.push(structClone(hub.docs[curId])); hub.docs[curId]=next; saveLocal({docId:curId}); openDoc(curId);}
 
 /* ====== EXPORT/IMPORT/DOC CRUD ====== */
-function exportDoc(id){const data=hub.docs[id]; const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=(data.title||"razem-debate")+".json"; a.click();}
+/* Redaction helpers */
+function looksLikeEmail(s){ return typeof s==='string' && /.+@.+\..+/.test(s); }
+function hashSmall(s){ // deterministic, fast (djb2)
+  let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h) + s.charCodeAt(i); h|=0; }
+  // to unsigned hex
+  return (h>>>0).toString(16).padStart(8,'0');
+}
+function redactDoc(original){
+  const map=new Map();
+  const mask=(id)=>{ if(!id) return id; if(!looksLikeEmail(id)) return id; if(map.has(id)) return map.get(id); const pseudo='uid_'+hashSmall(id); map.set(id,pseudo); return pseudo; };
+
+  const doc=structClone(original);
+  if(doc.owner) doc.owner = mask(doc.owner);
+  if(doc.comments){
+    Object.values(doc.comments).forEach(c=>{
+      if(c && c.userId) c.userId = mask(c.userId);
+    });
+  }
+  if(doc.branches){
+    Object.values(doc.branches).forEach(b=>{
+      if(b.owner) b.owner = mask(b.owner);
+      if(b.comments){
+        b.comments.forEach(c=>{ if(c.userId) c.userId = mask(c.userId); });
+      }
+      if(b.reactions){
+        ['plus','wiki'].forEach(k=>{
+          if(Array.isArray(b.reactions[k])){
+            b.reactions[k]=b.reactions[k].map(mask);
+          }
+        });
+      }
+    });
+  }
+  return doc;
+}
+
+function exportDoc(id){
+  const data=hub.docs[id];
+  const redacted = redactDoc(data);
+  const blob=new Blob([JSON.stringify(redacted,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=(data.title||"razem-debate")+".json"; a.click();
+}
+
 $("#doc-export").onclick=()=>exportDoc(curId);
 $("#home-new").onclick=()=>{const id=createDoc({title:"Nowy dokument",html:"<p><b>Wklej tutaj transkrypt.</b></p>"}); openDoc(id);};
 $("#home-docx").addEventListener("change",async(e)=>{const file=e.target.files?.[0]; if(!file)return; try{const ab=await file.arrayBuffer(); const res=await window.mammoth.convertToHtml({arrayBuffer:ab}); const title=file.name.replace(/\.docx$/i,""); const id=createDoc({title,html:res.value}); openDoc(id);}catch(err){alert("Import .docx nie powiódł się — sprawdź konsolę."); console.error(err);}});
@@ -711,3 +704,4 @@ window.addEventListener("load", async ()=>{
 </script>
 </body>
 </html>
+
