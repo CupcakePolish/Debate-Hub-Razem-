@@ -47,7 +47,6 @@
   #home .card:hover{border-color:#d8c3df;box-shadow:var(--shadow-sm)}
 
   #doc{display:none}
-  #home{display:none}
 
   /* keep the editor toolbar stuck just under the fixed header */
   .toolbar-holder{position:sticky; top:calc(var(--appbar-h) + 8px); z-index:999}
@@ -573,21 +572,8 @@ $("#doc-delete").onclick=()=>{const d=hub.docs[curId]; if(!(me && d.owner===me.u
 
 /* ====== START ====== */
 window.addEventListener("load", async ()=>{
-  load(); // read localStorage immediately
-
-  // FAST route: pick the right view *before* any await to avoid homepage flash
-  const hasDocs = Object.keys(hub.docs).length > 0;
-  if (hasDocs && hub.lastOpenId && hub.docs[hub.lastOpenId]) {
-    openDoc(hub.lastOpenId);
-    if (hub.lastOpenBranch && hub.docs[hub.lastOpenId].branches[hub.lastOpenBranch]) {
-      openBranch(hub.lastOpenBranch);
-    }
-  } else {
-    renderHome();
-  }
-
-  // Continue with async setup (badges, Access overlay, remote sync) in the background
-  await ensureUsername();
+  load();
+  await ensureUsername(); // pokaże overlay jeśli trzeba
 
   // 2) zsynchronizuj listę dokumentów z KV
   const ids = await remoteList();
@@ -605,8 +591,17 @@ window.addEventListener("load", async ()=>{
     Object.keys(hub.docs).forEach(id=>{ if(!known.has(id)) delete hub.docs[id]; });
     saveLocal({sync:false});
   }
-});
 
+  // 3) wróć tam gdzie byłaś
+  const docIds=Object.keys(hub.docs);
+  if(docIds.length===0){ renderHome(); return; }
+  if(hub.lastOpenId && hub.docs[hub.lastOpenId]) {
+    openDoc(hub.lastOpenId);
+    if(hub.lastOpenBranch && hub.docs[hub.lastOpenId].branches[hub.lastOpenBranch]) openBranch(hub.lastOpenBranch);
+  } else {
+    renderHome();
+  }
+});
 </script>
 </body>
 </html>
