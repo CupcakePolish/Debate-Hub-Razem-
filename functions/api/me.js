@@ -7,16 +7,28 @@ function json(d, s = 200) {
 }
 
 export const onRequestGet = async ({ request, env }) => {
-  const email = request.headers.get('cf-access-authenticated-user-email') || null;
+  const email = request.headers.get('cf-access-authenticated-user-email');
   if (!email) return json({ ok: false }, 401);
 
-  const key = `user:${email.toLowerCase()}`;
+  // Opaque stable ID -> SHA-256(SECRET_SALT + email)
+  const userId = await sha256Hex((env.SECRET_SALT || '') + email.toLowerCase());
+
+  // Read username stored under the new key
+  const key = `user:${userId}`;
   const u = (await env.KV_USERS.get(key, { type: 'json' })) || null;
 
+  // Never return email
   return json({
     ok: true,
-    email: email.toLowerCase(),
-    userId: u?.userId || email.toLowerCase(),
+    userId,
     username: u?.username || null,
   });
 };
+
+async function sha256Hex(s) {
+  const data = new TextEncoder().encode(s);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(hash)]
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
