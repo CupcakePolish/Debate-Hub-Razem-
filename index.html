@@ -314,7 +314,7 @@ async function ensureUsername(){
   me = await apiMe();
   const badge = document.getElementById('user-badge');
   const badge2 = document.getElementById('user-badge-doc');
-  const fallback = me?.username || me?.email?.split('@')[0] || me?.userId || '';
+  const fallback = me?.username || me?.userId || '';
   const label = fallback ? '@'+fallback : '';
   badge.textContent=label;
   badge2.textContent=label;
@@ -351,7 +351,7 @@ async function ensureUsername(){
 }
 
 function currentUserLabel(){
-  return me?.username || me?.email?.split('@')[0] || 'anon';
+  return me?.username || 'anon';
 }
 
 /* ====== HOME ====== */
