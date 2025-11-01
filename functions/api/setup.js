@@ -1,23 +1,28 @@
 // functions/api/setup.js
-import { sha256Hex, badRequest, okJson } from '../_utils.js';
+import { getEmailFromRequest, sha256Hex } from '../_utils.js';
 
 export const onRequestPost = async ({ request, env }) => {
-  const email = request.headers.get('cf-access-authenticated-user-email');
+  const email = getEmailFromRequest(request);
   if (!email) return new Response('unauthorized', { status: 401 });
 
   const body = await request.json().catch(() => ({}));
   const username = String(body.username || '').trim().toLowerCase();
-  if (!/^[a-z0-9_]{3,20}$/.test(username)) return badRequest('bad_username');
+  if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+    return new Response('bad_username', { status: 400 });
+  }
 
-  const userId = await sha256Hex(`${env.SECRET_SALT}:${email.toLowerCase()}`);
+  const userId = 'u_' + (await sha256Hex(email + (env.SECRET_SALT || 'static-fallback'))).slice(0, 32);
 
-  // Is username already taken by someone else
+  // enforce unique username
   const taken = await env.KV_USERS.get(`name:${username}`, { type: 'json' });
-  if (taken && taken.userId !== userId) return new Response('taken', { status: 409 });
+  if (taken && taken.userId !== userId) {
+    return new Response('taken', { status: 409 });
+  }
 
-  // Save mappings
-  await env.KV_USERS.put(`user:${userId}`, JSON.stringify({ userId, username }));
-  await env.KV_USERS.put(`name:${username}`, JSON.stringify({ userId }));
+  await env.KV_USERS.put(`user:${userId}`, JSON.stringify({ userId, username }), {});
+  await env.KV_USERS.put(`name:${username}`, JSON.stringify({ userId }), {});
 
-  return okJson({ ok: true, username });
+  return new Response(JSON.stringify({ ok: true, username }), {
+    headers: { 'content-type': 'application/json' },
+  });
 };
